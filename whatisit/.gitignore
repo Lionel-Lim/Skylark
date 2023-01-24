@@ -43,5 +43,7 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+# Files are containing API Key
 /android/app/src/main/AndroidManifest.xml
 /ios/Runner/AppDelegate.swift
+/web/index.html
