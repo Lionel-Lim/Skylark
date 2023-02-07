@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:whatisit/services/maps_getLocation.dart';
+import 'package:whatisit/services/maps_places.dart';
 import 'package:whatisit/services/read_utility.dart';
 
 class HomePage extends StatefulWidget {
@@ -102,7 +103,6 @@ class HomePageState extends State<HomePage> {
       } else {
         searchRadius = searchRadius + dir * 100;
       }
-      print(searchRadius);
     });
   }
 
@@ -176,6 +176,7 @@ class HomePageState extends State<HomePage> {
                 polylines: Set<Polyline>.of(_lines),
               ),
             ),
+            // Test Panel --------- Remove in production
             Positioned(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -245,6 +246,7 @@ class HomePageState extends State<HomePage> {
           //       icon: BitmapDescriptor.defaultMarker),
           // );
           updateCameraPosition(coordinates: userLatLng);
+          APIService().searchPlaces(coorinates: userLatLng, radius: 100);
         },
       ),
     );
