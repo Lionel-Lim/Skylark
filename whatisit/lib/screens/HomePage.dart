@@ -45,9 +45,11 @@ class HomePageState extends State<HomePage> {
             latitude: userLatLng.latitude,
             longitude: userLatLng.longitude,
             heading: userHeading,
+            radius: searchRadius,
           );
           updateCameraPosition(
             coordinates: userLatLng,
+            radius: searchRadius,
           );
         });
       }
@@ -58,6 +60,7 @@ class HomePageState extends State<HomePage> {
     required double latitude,
     required double longitude,
     required double heading,
+    required double radius,
   }) {
     _lines.add(
       Polyline(
@@ -66,8 +69,8 @@ class HomePageState extends State<HomePage> {
         width: 5,
         points: [
           userLatLng,
-          LatLng(latitude + 0.01 * cos(heading * pi / 180),
-              longitude + 0.01 * sin(heading * pi / 180))
+          LatLng(latitude + radius * 0.00001 * cos(heading * pi / 180),
+              longitude + radius * 0.00001 * sin(heading * pi / 180))
         ],
       ),
     );
@@ -75,10 +78,11 @@ class HomePageState extends State<HomePage> {
 
   void updateCameraPosition({
     required LatLng coordinates,
+    double radius = 1000,
   }) async {
     CameraPosition cameraPosition = CameraPosition(
       target: coordinates,
-      zoom: 16,
+      zoom: 24.4774 - (1.4089 * log(radius)),
     );
     final GoogleMapController controller = await _controller.future;
     controller.animateCamera(
@@ -98,6 +102,7 @@ class HomePageState extends State<HomePage> {
   LatLng userLatLng = LatLng(initLatLng.latitude, initLatLng.longitude);
   double userHeading = initHeading;
   String _mapStyle = "";
+  double searchRadius = 2000;
 
   // Set init map controller
   final Completer<GoogleMapController> _controller = Completer();
@@ -124,7 +129,6 @@ class HomePageState extends State<HomePage> {
     getUserLocation();
     listenLocationChanges();
     readMapStyle();
-    print(_mapStyle);
   }
 
   @override
@@ -183,7 +187,7 @@ class HomePageState extends State<HomePage> {
                     ),
                   ),
                   Text(
-                    "Live Reading :${positionStream!.isPaused}",
+                    "Live Reading :${!positionStream!.isPaused}",
                     style: const TextStyle(
                       fontSize: 20,
                     ),
@@ -202,28 +206,13 @@ class HomePageState extends State<HomePage> {
         label: const Text("My Location"),
         onPressed: () async {
           getUserLocation();
-          _markers.add(
-            Marker(
-                markerId: const MarkerId("user"),
-                position: userLatLng,
-                icon: BitmapDescriptor.defaultMarker),
-          );
+          // _markers.add(
+          //   Marker(
+          //       markerId: const MarkerId("user"),
+          //       position: userLatLng,
+          //       icon: BitmapDescriptor.defaultMarker),
+          // );
           updateCameraPosition(coordinates: userLatLng);
-          // _lines.add(
-          //   const Polyline(polylineId: PolylineId("userDirection"),
-          //   )
-          // )
-
-          // CameraPosition cameraPosition = CameraPosition(
-          //   target: userLatLng,
-          //   zoom: 16,
-          // );
-
-          // final GoogleMapController controller = await _controller.future;
-          // controller.animateCamera(
-          //   CameraUpdate.newCameraPosition(cameraPosition),
-          // );
-          setState(() {});
         },
       ),
     );
