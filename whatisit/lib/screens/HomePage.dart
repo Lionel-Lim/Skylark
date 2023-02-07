@@ -94,6 +94,18 @@ class HomePageState extends State<HomePage> {
     _mapStyle = await ReadUtility().loadAsset('assets/MapsStyle.json');
   }
 
+  void updateSearchRadius({bool isIncresing = true}) {
+    setState(() {
+      int dir = isIncresing ? 1 : -1;
+      if (searchRadius <= 100 && dir == -1) {
+        // Do nothing
+      } else {
+        searchRadius = searchRadius + dir * 100;
+      }
+      print(searchRadius);
+    });
+  }
+
   // Map Variables
   late Position userPosition;
   static LatLng initLatLng =
@@ -192,6 +204,26 @@ class HomePageState extends State<HomePage> {
                       fontSize: 20,
                     ),
                   ),
+                  Text(
+                    "Radius :$searchRadius",
+                    style: const TextStyle(
+                      fontSize: 20,
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      IconButton(
+                          onPressed: () => updateSearchRadius(
+                                isIncresing: true,
+                              ),
+                          icon: const Icon(Icons.arrow_upward)),
+                      IconButton(
+                          onPressed: () => updateSearchRadius(
+                                isIncresing: false,
+                              ),
+                          icon: const Icon(Icons.arrow_downward)),
+                    ],
+                  )
                 ],
               ),
             ),
