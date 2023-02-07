@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:whatisit/services/maps_getLocation.dart';
+import 'package:whatisit/services/read_utility.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -13,6 +14,12 @@ class HomePage extends StatefulWidget {
 }
 
 class HomePageState extends State<HomePage> {
+  static const LocationSettings locationSettings = LocationSettings(
+    accuracy: LocationAccuracy.high,
+    // distanceFilter: 0,
+  );
+  StreamSubscription<Position>? positionStream;
+
   void getUserLocation() async {
     await GetLocation()
         .getCurrentUserLocation()
@@ -22,12 +29,6 @@ class HomePageState extends State<HomePage> {
     setState(() {});
   }
 
-  static const LocationSettings locationSettings = LocationSettings(
-    accuracy: LocationAccuracy.high,
-    // distanceFilter: 0,
-  );
-  StreamSubscription<Position>? positionStream;
-
   void listenLocationChanges() {
     Position? incomingPosition;
     positionStream =
@@ -35,22 +36,29 @@ class HomePageState extends State<HomePage> {
             .listen((Position? position) {
       incomingPosition = position;
       if (incomingPosition == null) {
-        print("Null Passed!!!!!!!!!!!");
       } else {
         setState(() {
-          setState(() {});
           userPosition = incomingPosition!;
           userLatLng = LatLng(userPosition.latitude, userPosition.longitude);
           userHeading = userPosition.heading;
-          print("Repeated!!!!!!!!!!!");
-          updateHeadingLine();
-          updateCameraPosition();
+          updateHeadingLine(
+            latitude: userLatLng.latitude,
+            longitude: userLatLng.longitude,
+            heading: userHeading,
+          );
+          updateCameraPosition(
+            coordinates: userLatLng,
+          );
         });
       }
     });
   }
 
-  void updateHeadingLine() {
+  void updateHeadingLine({
+    required double latitude,
+    required double longitude,
+    required double heading,
+  }) {
     _lines.add(
       Polyline(
         polylineId: const PolylineId("Direction"),
@@ -58,22 +66,28 @@ class HomePageState extends State<HomePage> {
         width: 5,
         points: [
           userLatLng,
-          LatLng(userLatLng.latitude + 0.01 * cos(userHeading * pi / 180),
-              userLatLng.longitude + 0.01 * sin(userHeading * pi / 180))
+          LatLng(latitude + 0.01 * cos(heading * pi / 180),
+              longitude + 0.01 * sin(heading * pi / 180))
         ],
       ),
     );
   }
 
-  void updateCameraPosition() async {
+  void updateCameraPosition({
+    required LatLng coordinates,
+  }) async {
     CameraPosition cameraPosition = CameraPosition(
-      target: userLatLng,
+      target: coordinates,
       zoom: 16,
     );
     final GoogleMapController controller = await _controller.future;
     controller.animateCamera(
       CameraUpdate.newCameraPosition(cameraPosition),
     );
+  }
+
+  void readMapStyle() async {
+    _mapStyle = await ReadUtility().loadAsset('assets/MapsStyle.json');
   }
 
   // Map Variables
@@ -83,6 +97,7 @@ class HomePageState extends State<HomePage> {
   static double initHeading = 0.00;
   LatLng userLatLng = LatLng(initLatLng.latitude, initLatLng.longitude);
   double userHeading = initHeading;
+  String _mapStyle = "";
 
   // Set init map controller
   final Completer<GoogleMapController> _controller = Completer();
@@ -91,7 +106,7 @@ class HomePageState extends State<HomePage> {
     zoom: 14.4746,
   );
 
-// on below line we have created the list of markers
+// on below line we have created the list of markers and lines
   final List<Marker> _markers = <Marker>[
     const Marker(
       markerId: MarkerId('1'),
@@ -108,7 +123,8 @@ class HomePageState extends State<HomePage> {
     super.initState();
     getUserLocation();
     listenLocationChanges();
-    print("Passed Init State");
+    readMapStyle();
+    print(_mapStyle);
   }
 
   @override
@@ -138,6 +154,7 @@ class HomePageState extends State<HomePage> {
                 myLocationButtonEnabled: false,
                 // on below line specifying controller on map complete.
                 onMapCreated: (GoogleMapController controller) {
+                  controller.setMapStyle(_mapStyle);
                   _controller.complete(controller);
                 },
                 polylines: Set<Polyline>.of(_lines),
@@ -191,7 +208,7 @@ class HomePageState extends State<HomePage> {
                 position: userLatLng,
                 icon: BitmapDescriptor.defaultMarker),
           );
-          updateCameraPosition();
+          updateCameraPosition(coordinates: userLatLng);
           // _lines.add(
           //   const Polyline(polylineId: PolylineId("userDirection"),
           //   )

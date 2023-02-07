@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       // on below line we are specifying title of our app
-      title: 'GFG',
+      title: 'What is it?',
       // on below line we are hiding debug banner
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
