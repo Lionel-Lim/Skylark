@@ -296,9 +296,16 @@ class HomePageState extends State<HomePage> {
                 onPressed: () async {
                   _markers.clear();
                   searchStatus = false;
+
+                  var polytool = PolygonTool(polygon);
+                  var sw = polytool.southwest;
+                  var ne = polytool.northeast;
+                  var center = polytool.centroid;
+                  var radius = Geometry().calculateDistance(sw, ne)! / 2;
+                  print(radius);
+
                   List<PlacesModel> searchResult = await APIService()
-                      .searchPlaces(
-                          coorinates: userLatLng, radius: searchRadius);
+                      .searchPlaces(coorinates: center, radius: radius);
                   print(searchResult);
                   for (var place in searchResult) {
                     // print(place.geometry);
@@ -314,6 +321,21 @@ class HomePageState extends State<HomePage> {
                             : BitmapDescriptor.defaultMarkerWithHue(50),
                       ),
                     );
+                    _markers.add(Marker(
+                      markerId: const MarkerId("sw"),
+                      position: sw,
+                      icon: BitmapDescriptor.defaultMarkerWithHue(70),
+                    ));
+                    _markers.add(Marker(
+                      markerId: const MarkerId("ne"),
+                      position: ne,
+                      icon: BitmapDescriptor.defaultMarkerWithHue(70),
+                    ));
+                    _markers.add(Marker(
+                      markerId: const MarkerId("center"),
+                      position: center,
+                      icon: BitmapDescriptor.defaultMarkerWithHue(100),
+                    ));
                   }
                   print(_lines[0].points);
                   print("End");

@@ -5,6 +5,8 @@ import 'package:maps_toolkit/maps_toolkit.dart' as maptool;
 typedef Haversine = Map<String, double>;
 
 class Geometry {
+  static const double earthRadius = 6371009.0;
+
   /// Rotate [endPoint] relative to [startPoint] by [angle].
   LatLng rotatePoint(LatLng startPoint, LatLng endPoint, double angle) {
     final angleRad = angle * pi / 180.0; // convert angle to radians
@@ -26,7 +28,6 @@ class Geometry {
 
   /// haversine formula to calculate geometry between WGS84 coordinates.
   Haversine haversine(LatLng point1, LatLng point2) {
-    const double earthRadius = 6371000;
     double point1Lat = point1.latitude * pi / 180;
     double point2Lat = point2.latitude * pi / 180;
     double deltaLat = (point2.latitude - point1.latitude) * pi / 180;
@@ -54,7 +55,35 @@ class Geometry {
     for (var coord in coordinates) {
       coordSet.add(maptool.LatLng(coord.latitude, coord.longitude));
     }
+    maptool.SphericalUtil.earthRadius;
     return maptool.PolygonUtil.containsLocation(
         maptool.LatLng(point.latitude, point.longitude), coordSet, true);
+  }
+}
+
+class PolygonTool {
+  late LatLng southwest;
+  late LatLng northeast;
+  late LatLng centroid;
+
+  PolygonTool(List<LatLng> vertices) {
+    double swLat = _getMin(vertices.map((e) => e.latitude).toList());
+    double swLng = _getMin(vertices.map((e) => e.longitude).toList());
+    double neLat = _getMax(vertices.map((e) => e.latitude).toList());
+    double neLng = _getMax(vertices.map((e) => e.longitude).toList());
+
+    southwest = LatLng(swLat, swLng);
+    northeast = LatLng(neLat, neLng);
+
+    centroid = LatLng((southwest.latitude + northeast.latitude) / 2,
+        (southwest.longitude + northeast.longitude) / 2);
+  }
+
+  double _getMin(List<double> values) {
+    return values.reduce((value, element) => value < element ? value : element);
+  }
+
+  double _getMax(List<double> values) {
+    return values.reduce((value, element) => value > element ? value : element);
   }
 }

@@ -22,7 +22,7 @@ class APIService {
     final url = Uri.parse(
         "$baseURL${coorinates.latitude}%2C${coorinates.longitude}&radius=$radius&type=$types&key=${apiKeys["GoogleMaps"]}");
     final response = await http.get(url);
-    // print(jsonDecode(response.body)["results"]);
+    // print(response.statusCode);
     if (response.statusCode == 200) {
       for (var webtoon in jsonDecode(response.body)["results"].sublist(1)) {
         // print(webtoon);

@@ -3,7 +3,8 @@
         "elementType": "labels.text",
         "stylers": [
             {
-                "visibility": "on"
+                "visibility": "on",
+                "color": "#99FF33"
             }
         ]
     },
