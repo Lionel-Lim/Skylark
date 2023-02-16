@@ -3,6 +3,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:whatisit/models/places_model.dart';
+import 'package:whatisit/services/geometry.dart';
 import 'package:whatisit/services/maps_getLocation.dart';
 import 'package:whatisit/services/maps_places.dart';
 import 'package:whatisit/services/read_utility.dart';
@@ -63,18 +65,39 @@ class HomePageState extends State<HomePage> {
     required double heading,
     required double radius,
   }) {
-    _lines.add(
+    // Reset geometry
+    _lines.clear();
+    polygon.clear();
+    LatLng startPoint = userLatLng;
+    LatLng endPoint = LatLng(
+        latitude + radius * 0.00001 * cos(heading * pi / 180),
+        longitude + radius * 0.00001 * sin(heading * pi / 180));
+    polygon.addAll([
+      startPoint,
+      Geometry().rotatePoint(startPoint, endPoint, -60),
+      endPoint,
+      Geometry().rotatePoint(startPoint, endPoint, 60)
+    ]);
+    _lines.addAll([
+      Polyline(
+        polylineId: const PolylineId("Left"),
+        color: Colors.orange,
+        width: 5,
+        points: [userLatLng, polygon[1]],
+      ),
       Polyline(
         polylineId: const PolylineId("Direction"),
         color: Colors.red,
         width: 5,
-        points: [
-          userLatLng,
-          LatLng(latitude + radius * 0.00001 * cos(heading * pi / 180),
-              longitude + radius * 0.00001 * sin(heading * pi / 180))
-        ],
+        points: [startPoint, polygon[2]],
       ),
-    );
+      Polyline(
+        polylineId: const PolylineId("Right"),
+        color: Colors.pink,
+        width: 5,
+        points: [userLatLng, polygon[3]],
+      ),
+    ]);
   }
 
   void updateCameraPosition({
@@ -115,6 +138,7 @@ class HomePageState extends State<HomePage> {
   double userHeading = initHeading;
   String _mapStyle = "";
   double searchRadius = 2000;
+  bool searchStatus = true;
 
   // Set init map controller
   final Completer<GoogleMapController> _controller = Completer();
@@ -134,6 +158,7 @@ class HomePageState extends State<HomePage> {
     ),
   ];
   final List<Polyline> _lines = <Polyline>[];
+  final List<LatLng> polygon = [];
 
   @override
   void initState() {
@@ -234,20 +259,70 @@ class HomePageState extends State<HomePage> {
       // on pressing floating action button the camera will take to user current location
       floatingActionButtonLocation:
           FloatingActionButtonLocation.miniCenterFloat,
-      floatingActionButton: FloatingActionButton.extended(
-        icon: const Icon(Icons.location_on_sharp),
-        label: const Text("My Location"),
-        onPressed: () async {
-          getUserLocation();
-          // _markers.add(
-          //   Marker(
-          //       markerId: const MarkerId("user"),
-          //       position: userLatLng,
-          //       icon: BitmapDescriptor.defaultMarker),
-          // );
-          updateCameraPosition(coordinates: userLatLng);
-          APIService().searchPlaces(coorinates: userLatLng, radius: 100);
-        },
+      floatingActionButton: SizedBox(
+        height: 100,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            SizedBox(
+              width: 150,
+              child: FloatingActionButton.extended(
+                icon: const Icon(Icons.location_on_sharp),
+                label: const Text("My Location"),
+                onPressed: () async {
+                  getUserLocation();
+                  // _markers.add(
+                  //   Marker(
+                  //       markerId: const MarkerId("user"),
+                  //       position: userLatLng,
+                  //       icon: BitmapDescriptor.defaultMarker),
+                  // );
+                  updateCameraPosition(coordinates: userLatLng);
+                },
+              ),
+            ),
+            SizedBox(
+              width: 150,
+              child: FloatingActionButton.extended(
+                icon: searchStatus ? const Icon(Icons.search_sharp) : null,
+                label: searchStatus
+                    ? const Text("Search")
+                    : const CircularProgressIndicator(
+                        color: Colors.white,
+                      ),
+                // label: const CircularProgressIndicator(
+                //   color: Colors.white,
+                // ),
+                onPressed: () async {
+                  _markers.clear();
+                  searchStatus = false;
+                  List<PlacesModel> searchResult = await APIService()
+                      .searchPlaces(
+                          coorinates: userLatLng, radius: searchRadius);
+                  print(searchResult);
+                  for (var place in searchResult) {
+                    // print(place.geometry);
+                    LatLng point = LatLng(place.geometry["location"]["lat"],
+                        place.geometry["location"]["lng"]);
+                    _markers.add(
+                      Marker(
+                        markerId: MarkerId(place.placeId),
+                        position: LatLng(place.geometry["location"]["lat"],
+                            place.geometry["location"]["lng"]),
+                        icon: Geometry().isInside(point, polygon)
+                            ? BitmapDescriptor.defaultMarker
+                            : BitmapDescriptor.defaultMarkerWithHue(50),
+                      ),
+                    );
+                  }
+                  print(_lines[0].points);
+                  print("End");
+                  searchStatus = true;
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

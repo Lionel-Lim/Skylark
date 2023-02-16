@@ -28,10 +28,9 @@ class APIService {
         // print(webtoon);
         searchResult.add(PlacesModel.fromJson(webtoon));
       }
-      print(searchResult);
+      // print(searchResult);
       return searchResult;
     }
-    print(response.body);
     throw Error();
   }
 }
