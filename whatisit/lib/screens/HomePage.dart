@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:whatisit/models/places_model.dart';
+import 'package:whatisit/screens/SearchResult.dart';
 import 'package:whatisit/services/geometry.dart';
 import 'package:whatisit/services/maps_getLocation.dart';
 import 'package:whatisit/services/maps_places.dart';
@@ -22,6 +23,25 @@ class HomePageState extends State<HomePage> {
     // distanceFilter: 0,
   );
   StreamSubscription<Position>? positionStream;
+
+  void _showModalButtonSheet(BuildContext context, List<PlacesModel> result) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(30),
+        ),
+      ),
+      builder: (context) => DraggableScrollableSheet(
+        expand: false,
+        builder: (context, scrollController) => SingleChildScrollView(
+          controller: scrollController,
+          child: SearchResult(result),
+        ),
+      ),
+    );
+  }
 
   void getUserLocation() async {
     await GetLocation()
@@ -337,6 +357,8 @@ class HomePageState extends State<HomePage> {
                       icon: BitmapDescriptor.defaultMarkerWithHue(100),
                     ));
                   }
+                  if (!mounted) return;
+                  _showModalButtonSheet(context, searchResult);
                   print(_lines[0].points);
                   print("End");
                   searchStatus = true;
