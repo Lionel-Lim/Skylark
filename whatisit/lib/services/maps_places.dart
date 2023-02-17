@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:whatisit/models/places_model.dart';
@@ -36,14 +37,22 @@ class APIService {
     throw Error();
   }
 
-  Future<dynamic> getPhoto(String photoReference) async {
+  Future<CachedNetworkImage> getPhoto(String photoReference) async {
     apiKeys =
         jsonDecode(await ReadUtility().loadAsset('assets/APIKeys.json'))[0];
+    if (photoReference == "") {
+      photoReference = "https://img.icons8.com/ios-filled/2x/no-image.png";
+    }
     final url =
         "$photoURL?maxwidth=400&maxheight=400&photo_reference=$photoReference&key=${apiKeys["GoogleMaps"]}";
-    final photo = CachedNetworkImageProvider(url);
+    final photo = CachedNetworkImage(
+      imageUrl: url,
+      placeholder: (context, url) => const CircularProgressIndicator(),
+      errorWidget: (context, url, error) => const Icon(Icons.error),
+    );
     print("Result is");
-    print(photo);
+    print(photo.httpHeaders);
+    return photo;
     // final response = await http.get(url);
     // if (response.statusCode == 200) {
     //   print("result is");

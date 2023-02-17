@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:whatisit/models/places_model.dart';
 import 'package:whatisit/services/maps_places.dart';
@@ -12,16 +13,22 @@ class SearchResult extends StatefulWidget {
 
 final numbers = List.generate(50, (index) => "$index");
 
-dynamic fetchImg(result) async {
-  final photos = [];
+Future<List<CachedNetworkImage>> fetchImg(result) async {
+  List<CachedNetworkImage> photos = [];
   for (var item in result) {
-    photos.add(APIService().getPhoto(item.photos[0]["photo_reference"]));
+    // https://img.icons8.com/ios-filled/2x/no-image.png
+    if (item.photos.length > 0) {
+      photos
+          .add(await APIService().getPhoto(item.photos[0]["photo_reference"]));
+    } else {
+      photos.add(await APIService().getPhoto(""));
+    }
   }
   return photos;
 }
 
-Future<Widget> buildGridView(List<PlacesModel> result) async {
-  final photos = await fetchImg(result);
+Widget buildGridView(
+    List<PlacesModel> result, List<CachedNetworkImage> photos) {
   return SizedBox(
     height: 500,
     child: GridView.builder(
@@ -39,18 +46,24 @@ Future<Widget> buildGridView(List<PlacesModel> result) async {
   );
 }
 
-Widget buildNumber(PlacesModel item, dynamic photo) {
+Widget buildNumber(PlacesModel item, CachedNetworkImage photo) {
   return Container(
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-        image: DecorationImage(
-      image: photo,
-      fit: BoxFit.cover,
-    )),
-    color: Colors.orange,
-    child: Center(
-      child: Text(item.name),
+    child: Column(
+      children: [
+        photo,
+        Text(item.name),
+      ],
     ),
+    // padding: const EdgeInsets.all(16),
+    // decoration: BoxDecoration(
+    //     image: DecorationImage(
+    //   image: photo,
+    //   fit: BoxFit.cover,
+    // )),
+    // color: Colors.orange,
+    // child: Center(
+    //   child: Text(item.name),
+    // ),
   );
 }
 
@@ -76,7 +89,21 @@ class _SearchResultState extends State<SearchResult> {
             height: 40,
           ),
           Expanded(
-            child: buildGridView(widget.result),
+            child: FutureBuilder<List<CachedNetworkImage>>(
+              future: fetchImg(widget.result),
+              builder: (context, snapshot) {
+                print("result : ${widget.result}");
+                if (snapshot.hasData) {
+                  print("future builder");
+                  print(snapshot.data);
+                  return buildGridView(widget.result, snapshot.data!);
+                  // return const Text("data");
+                } else {
+                  return Text("failed: ${snapshot.error}");
+                }
+              },
+            ),
+            // child: buildGridView(widget.result),
           ),
         ],
       ),
