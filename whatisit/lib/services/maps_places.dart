@@ -40,11 +40,13 @@ class APIService {
   Future<CachedNetworkImage> getPhoto(String photoReference) async {
     apiKeys =
         jsonDecode(await ReadUtility().loadAsset('assets/APIKeys.json'))[0];
+    late final String url;
     if (photoReference == "") {
-      photoReference = "https://img.icons8.com/ios-filled/2x/no-image.png";
+      url = "https://img.icons8.com/ios-filled/2x/no-image.png";
+    } else {
+      url =
+          "$photoURL?maxheight=400&photo_reference=$photoReference&key=${apiKeys["GoogleMaps"]}";
     }
-    final url =
-        "$photoURL?maxheight=400&photo_reference=$photoReference&key=${apiKeys["GoogleMaps"]}";
     final photo = CachedNetworkImage(
       imageUrl: url,
       placeholder: (context, url) => const CircularProgressIndicator(),
