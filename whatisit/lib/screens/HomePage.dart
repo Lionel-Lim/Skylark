@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -24,9 +25,25 @@ class HomePageState extends State<HomePage> {
   );
   StreamSubscription<Position>? positionStream;
 
-  void _showModalButtonSheet(BuildContext context, List<PlacesModel> result) {
+  Future<List<CachedNetworkImage>> _fetchImg(result) async {
+    List<CachedNetworkImage> photos = [];
+    for (var item in result) {
+      if (item.photos.length > 0) {
+        photos.add(
+            await APIService().getPhoto(item.photos[0]["photo_reference"]));
+      } else {
+        photos.add(await APIService().getPhoto(""));
+      }
+    }
+    return photos;
+  }
+
+  void _showModalButtonSheet(BuildContext context, List<PlacesModel> result,
+      List<CachedNetworkImage> photos) {
     showModalBottomSheet(
       context: context,
+      enableDrag: false,
+      isDismissible: false,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
@@ -35,9 +52,11 @@ class HomePageState extends State<HomePage> {
       ),
       builder: (context) => DraggableScrollableSheet(
         expand: false,
+        minChildSize: 0.1,
+        snap: true,
         builder: (context, scrollController) => SingleChildScrollView(
           controller: scrollController,
-          child: SearchResult(result),
+          child: SearchResult(result, photos),
         ),
       ),
     );
@@ -323,45 +342,58 @@ class HomePageState extends State<HomePage> {
                   var center = polytool.centroid;
                   var radius = Geometry().calculateDistance(sw, ne)! / 2;
                   print(radius);
-
-                  List<PlacesModel> searchResult = await APIService()
-                      .searchPlaces(coorinates: center, radius: radius);
-                  print(searchResult);
-                  for (var place in searchResult) {
-                    // print(place.geometry);
-                    LatLng point = LatLng(place.geometry["location"]["lat"],
-                        place.geometry["location"]["lng"]);
-                    _markers.add(
-                      Marker(
-                        markerId: MarkerId(place.placeId),
-                        position: LatLng(place.geometry["location"]["lat"],
-                            place.geometry["location"]["lng"]),
-                        icon: Geometry().isInside(point, polygon)
-                            ? BitmapDescriptor.defaultMarker
-                            : BitmapDescriptor.defaultMarkerWithHue(50),
-                      ),
-                    );
-                    _markers.add(Marker(
-                      markerId: const MarkerId("sw"),
-                      position: sw,
-                      icon: BitmapDescriptor.defaultMarkerWithHue(70),
-                    ));
-                    _markers.add(Marker(
-                      markerId: const MarkerId("ne"),
-                      position: ne,
-                      icon: BitmapDescriptor.defaultMarkerWithHue(70),
-                    ));
-                    _markers.add(Marker(
-                      markerId: const MarkerId("center"),
-                      position: center,
-                      icon: BitmapDescriptor.defaultMarkerWithHue(100),
-                    ));
+                  try {
+                    List<PlacesModel> searchResult = await APIService()
+                        .searchPlaces(coorinates: center, radius: radius)
+                        .timeout(const Duration(seconds: 20));
+                    print(searchResult);
+                    List<CachedNetworkImage> searchPhoto =
+                        await _fetchImg(searchResult);
+                    //
+                    // Makers on the map
+                    //
+                    for (var place in searchResult) {
+                      // print(place.geometry);
+                      LatLng point = LatLng(place.geometry["location"]["lat"],
+                          place.geometry["location"]["lng"]);
+                      _markers.add(
+                        Marker(
+                          markerId: MarkerId(place.placeId),
+                          position: LatLng(place.geometry["location"]["lat"],
+                              place.geometry["location"]["lng"]),
+                          icon: Geometry().isInside(point, polygon)
+                              ? BitmapDescriptor.defaultMarker
+                              : BitmapDescriptor.defaultMarkerWithHue(50),
+                        ),
+                      );
+                      _markers.add(Marker(
+                        markerId: const MarkerId("sw"),
+                        position: sw,
+                        icon: BitmapDescriptor.defaultMarkerWithHue(70),
+                      ));
+                      _markers.add(Marker(
+                        markerId: const MarkerId("ne"),
+                        position: ne,
+                        icon: BitmapDescriptor.defaultMarkerWithHue(70),
+                      ));
+                      _markers.add(Marker(
+                        markerId: const MarkerId("center"),
+                        position: center,
+                        icon: BitmapDescriptor.defaultMarkerWithHue(100),
+                      ));
+                    }
+                    //
+                    //
+                    //
+                    if (!mounted) return;
+                    _showModalButtonSheet(context, searchResult, searchPhoto);
+                    print(_lines[0].points);
+                    print("End");
+                    searchStatus = true;
+                  } on TimeoutException {
+                    searchStatus = true;
+                    print("Timeout Error");
                   }
-                  if (!mounted) return;
-                  _showModalButtonSheet(context, searchResult);
-                  print(_lines[0].points);
-                  print("End");
-                  searchStatus = true;
                 },
               ),
             ),

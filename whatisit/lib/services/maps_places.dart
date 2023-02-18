@@ -44,14 +44,15 @@ class APIService {
       photoReference = "https://img.icons8.com/ios-filled/2x/no-image.png";
     }
     final url =
-        "$photoURL?maxwidth=400&maxheight=400&photo_reference=$photoReference&key=${apiKeys["GoogleMaps"]}";
+        "$photoURL?maxheight=400&photo_reference=$photoReference&key=${apiKeys["GoogleMaps"]}";
     final photo = CachedNetworkImage(
       imageUrl: url,
       placeholder: (context, url) => const CircularProgressIndicator(),
       errorWidget: (context, url, error) => const Icon(Icons.error),
+      fit: BoxFit.cover,
     );
-    print("Result is");
-    print(photo.httpHeaders);
+    // print("Result is");
+    // print(photo.httpHeaders);
     return photo;
     // final response = await http.get(url);
     // if (response.statusCode == 200) {
