@@ -2,10 +2,13 @@ import 'dart:async';
 import 'dart:math';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_compass/flutter_compass.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:smooth_compass/utils/smooth_compass.dart';
 import 'package:whatisit/models/places_model.dart';
 import 'package:whatisit/screens/SearchResult.dart';
+import 'package:whatisit/screens/SearchResult_2.dart';
 import 'package:whatisit/services/geometry.dart';
 import 'package:whatisit/services/maps_getLocation.dart';
 import 'package:whatisit/services/maps_places.dart';
@@ -24,6 +27,10 @@ class HomePageState extends State<HomePage> {
     // distanceFilter: 0,
   );
   StreamSubscription<Position>? positionStream;
+
+  Widget _searchPlaces(result, photos) {
+    return SearchPlaces(result, photos);
+  }
 
   Future<List<CachedNetworkImage>> _fetchImg(result) async {
     List<CachedNetworkImage> photos = [];
@@ -82,7 +89,7 @@ class HomePageState extends State<HomePage> {
         setState(() {
           userPosition = incomingPosition!;
           userLatLng = LatLng(userPosition.latitude, userPosition.longitude);
-          userHeading = userPosition.heading;
+          // userHeading = userPosition.heading;
           updateHeadingLine(
             latitude: userLatLng.latitude,
             longitude: userLatLng.longitude,
@@ -168,8 +175,30 @@ class HomePageState extends State<HomePage> {
     });
   }
 
+  void readDirection() {
+    debugPrint("Read Direction.");
+    FlutterCompass.events?.listen((onData) {
+      userHeading = onData.heading.runtimeType == double ? onData.heading! : 0;
+      print("${onData.heading}");
+    }, onDone: () {
+      debugPrint("Finish!");
+    }, onError: (error) {
+      print(error);
+    });
+
+    Compass()
+        .compassUpdates(
+            interval: const Duration(milliseconds: -1), azimuthFix: 0)
+        .listen(
+      (event) {
+        debugPrint("S Compass value is ${event.angle}");
+      },
+    );
+
+    setState(() {});
+  }
+
   // Map Variables
-  late Position userPosition;
   static LatLng initLatLng =
       const LatLng(51.53870580986422, -0.0164587280985591);
   static double initHeading = 0.00;
@@ -177,7 +206,11 @@ class HomePageState extends State<HomePage> {
   double userHeading = initHeading;
   String _mapStyle = "";
   double searchRadius = 2000;
-  bool searchStatus = true;
+  bool isSearching = false;
+  bool isSearchFinished = false;
+  late List<PlacesModel> searchResult;
+  late List<CachedNetworkImage> searchPhoto;
+  late Position userPosition;
 
   // Set init map controller
   final Completer<GoogleMapController> _controller = Completer();
@@ -205,6 +238,7 @@ class HomePageState extends State<HomePage> {
     getUserLocation();
     listenLocationChanges();
     readMapStyle();
+    readDirection();
   }
 
   @override
@@ -292,6 +326,14 @@ class HomePageState extends State<HomePage> {
                 ],
               ),
             ),
+            // Search Result Placement
+            Positioned(
+              bottom: 0,
+              left: 0,
+              child: isSearchFinished
+                  ? _searchPlaces(searchResult, searchPhoto)
+                  : Container(),
+            ),
           ],
         ),
       ),
@@ -323,32 +365,32 @@ class HomePageState extends State<HomePage> {
             SizedBox(
               width: 150,
               child: FloatingActionButton.extended(
-                icon: searchStatus ? const Icon(Icons.search_sharp) : null,
-                label: searchStatus
-                    ? const Text("Search")
-                    : const CircularProgressIndicator(
+                icon: isSearching ? null : const Icon(Icons.search_sharp),
+                label: isSearching
+                    ? const CircularProgressIndicator(
                         color: Colors.white,
-                      ),
+                      )
+                    : const Text("Search"),
+
                 // label: const CircularProgressIndicator(
                 //   color: Colors.white,
                 // ),
                 onPressed: () async {
+                  setState(() {});
                   _markers.clear();
-                  searchStatus = false;
+                  isSearching = true;
 
                   var polytool = PolygonTool(polygon);
                   var sw = polytool.southwest;
                   var ne = polytool.northeast;
                   var center = polytool.centroid;
                   var radius = Geometry().calculateDistance(sw, ne)! / 2;
-                  print(radius);
                   try {
-                    List<PlacesModel> searchResult = await APIService()
+                    searchResult = await APIService()
                         .searchPlaces(coorinates: center, radius: radius)
                         .timeout(const Duration(seconds: 20));
-                    print(searchResult);
-                    List<CachedNetworkImage> searchPhoto =
-                        await _fetchImg(searchResult);
+                    debugPrint("$searchResult");
+                    searchPhoto = await _fetchImg(searchResult);
                     //
                     // Makers on the map
                     //
@@ -386,13 +428,12 @@ class HomePageState extends State<HomePage> {
                     //
                     //
                     if (!mounted) return;
-                    _showModalButtonSheet(context, searchResult, searchPhoto);
-                    print(_lines[0].points);
-                    print("End");
-                    searchStatus = true;
+                    // _showModalButtonSheet(context, searchResult, searchPhoto);
+                    isSearching = false;
+                    isSearchFinished = true;
                   } on TimeoutException {
-                    searchStatus = true;
-                    print("Timeout Error");
+                    isSearching = false;
+                    debugPrint("Timeout Error");
                   }
                 },
               ),

@@ -1,5 +1,7 @@
 PODS:
   - Flutter (1.0.0)
+  - flutter_compass (0.0.1):
+    - Flutter
   - flutter_sensors (0.0.1):
     - Flutter
   - FMDB (2.7.5):
@@ -24,6 +26,7 @@ PODS:
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
+  - flutter_compass (from `.symlinks/plugins/flutter_compass/ios`)
   - flutter_sensors (from `.symlinks/plugins/flutter_sensors/ios`)
   - geolocator_apple (from `.symlinks/plugins/geolocator_apple/ios`)
   - google_maps_flutter_ios (from `.symlinks/plugins/google_maps_flutter_ios/ios`)
@@ -38,6 +41,8 @@ SPEC REPOS:
 EXTERNAL SOURCES:
   Flutter:
     :path: Flutter
+  flutter_compass:
+    :path: ".symlinks/plugins/flutter_compass/ios"
   flutter_sensors:
     :path: ".symlinks/plugins/flutter_sensors/ios"
   geolocator_apple:
@@ -51,6 +56,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
+  flutter_compass: cbbd285cea1584c7ac9c4e0c3e1f17cbea55e855
   flutter_sensors: dc6eed3291e7724bf8f4138d7d14c4071b42bd29
   FMDB: 2ce00b547f966261cd18927a3ddb07cb6f3db82a
   geolocator_apple: cc556e6844d508c95df1e87e3ea6fa4e58c50401

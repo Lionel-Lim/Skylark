@@ -15,7 +15,6 @@ class SearchResult extends StatefulWidget {
 Widget buildGridView(
     List<PlacesModel> result, List<CachedNetworkImage> photos) {
   return SizedBox(
-    // height: 100,
     child: GridView.builder(
         shrinkWrap: true,
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
