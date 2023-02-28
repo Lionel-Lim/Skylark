@@ -59,35 +59,9 @@ class _SearchResultState extends State<SearchResult> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 500,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SizedBox(
-            height: 30,
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: const [
-              Text(
-                " Search Result",
-                style: TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 30,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(
-            height: 50,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: const [
-                Text("Sort by Height  "),
-              ],
-            ),
-          ),
           Expanded(
             child: buildGridView(widget.result, widget.photos),
           ),

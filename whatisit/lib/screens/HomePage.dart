@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_compass/flutter_compass.dart';
 import 'package:geolocator/geolocator.dart';
@@ -28,8 +30,10 @@ class HomePageState extends State<HomePage> {
   );
   StreamSubscription<Position>? positionStream;
 
-  Widget _searchPlaces(result, photos) {
-    return SearchPlaces(result, photos);
+  Widget _searchPlaces(result, photos, userLocation) {
+    setState(() {});
+    debugPrint("gridview updating...");
+    return SearchPlaces(result, photos, userLocation);
   }
 
   Future<List<CachedNetworkImage>> _fetchImg(result) async {
@@ -75,10 +79,11 @@ class HomePageState extends State<HomePage> {
         .then((value) => userPosition = value);
     userLatLng = LatLng(userPosition.latitude, userPosition.longitude);
     userHeading = userPosition.heading;
-    setState(() {});
   }
 
   void listenLocationChanges() {
+    readDeviceInfo();
+
     Position? incomingPosition;
     positionStream =
         Geolocator.getPositionStream(locationSettings: locationSettings)
@@ -86,21 +91,19 @@ class HomePageState extends State<HomePage> {
       incomingPosition = position;
       if (incomingPosition == null) {
       } else {
-        setState(() {
-          userPosition = incomingPosition!;
-          userLatLng = LatLng(userPosition.latitude, userPosition.longitude);
-          // userHeading = userPosition.heading;
-          updateHeadingLine(
-            latitude: userLatLng.latitude,
-            longitude: userLatLng.longitude,
-            heading: userHeading,
-            radius: searchRadius,
-          );
-          updateCameraPosition(
-            coordinates: userLatLng,
-            radius: searchRadius,
-          );
-        });
+        userPosition = incomingPosition!;
+        userLatLng = LatLng(userPosition.latitude, userPosition.longitude);
+        if (isSimulator) userHeading = userPosition.heading;
+        updateHeadingLine(
+          latitude: userLatLng.latitude,
+          longitude: userLatLng.longitude,
+          heading: userHeading,
+          radius: searchRadius,
+        );
+        updateCameraPosition(
+          coordinates: userLatLng,
+          radius: searchRadius,
+        );
       }
     });
   }
@@ -165,18 +168,15 @@ class HomePageState extends State<HomePage> {
   }
 
   void updateSearchRadius({bool isIncresing = true}) {
-    setState(() {
-      int dir = isIncresing ? 1 : -1;
-      if (searchRadius <= 100 && dir == -1) {
-        // Do nothing
-      } else {
-        searchRadius = searchRadius + dir * 100;
-      }
-    });
+    int dir = isIncresing ? 1 : -1;
+    if (searchRadius <= 100 && dir == -1) {
+      // Do nothing
+    } else {
+      searchRadius = searchRadius + dir * 100;
+    }
   }
 
   void readDirection() {
-    debugPrint("Read Direction.");
     FlutterCompass.events?.listen((onData) {
       userHeading = onData.heading.runtimeType == double ? onData.heading! : 0;
       print("${onData.heading}");
@@ -194,8 +194,22 @@ class HomePageState extends State<HomePage> {
         debugPrint("S Compass value is ${event.angle}");
       },
     );
+  }
 
-    setState(() {});
+  void readDeviceInfo() async {
+    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    debugPrint("Is real device environment : ");
+    if (Platform.isIOS) {
+      final info = await deviceInfo.iosInfo;
+      isSimulator = !info.isPhysicalDevice;
+      debugPrint("${info.isPhysicalDevice}");
+    } else if (Platform.isAndroid) {
+      final info = await deviceInfo.androidInfo;
+      isSimulator = !info.isPhysicalDevice;
+      debugPrint("${info.isPhysicalDevice}");
+    } else {
+      debugPrint("Not Supported Device.");
+    }
   }
 
   // Map Variables
@@ -208,6 +222,7 @@ class HomePageState extends State<HomePage> {
   double searchRadius = 2000;
   bool isSearching = false;
   bool isSearchFinished = false;
+  bool isSimulator = true;
   late List<PlacesModel> searchResult;
   late List<CachedNetworkImage> searchPhoto;
   late Position userPosition;
@@ -331,7 +346,7 @@ class HomePageState extends State<HomePage> {
               bottom: 0,
               left: 0,
               child: isSearchFinished
-                  ? _searchPlaces(searchResult, searchPhoto)
+                  ? _searchPlaces(searchResult, searchPhoto, userLatLng)
                   : Container(),
             ),
           ],
@@ -376,7 +391,6 @@ class HomePageState extends State<HomePage> {
                 //   color: Colors.white,
                 // ),
                 onPressed: () async {
-                  setState(() {});
                   _markers.clear();
                   isSearching = true;
 
@@ -435,6 +449,7 @@ class HomePageState extends State<HomePage> {
                     isSearching = false;
                     debugPrint("Timeout Error");
                   }
+                  setState(() {});
                 },
               ),
             ),
