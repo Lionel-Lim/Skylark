@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "whatisit" "\0"
+            VALUE "FileDescription", "Skylark" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "whatisit" "\0"
+            VALUE "InternalName", "Skylark" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2023 com.example. All rights reserved." "\0"
             VALUE "OriginalFilename", "whatisit.exe" "\0"
-            VALUE "ProductName", "whatisit" "\0"
+            VALUE "ProductName", "Skylark" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
