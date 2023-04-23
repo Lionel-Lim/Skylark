@@ -1,15 +1,16 @@
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:skylark/models/places_model.dart';
 
-class SearchResult extends StatefulWidget {
+class SearchResultGrid extends StatefulWidget {
   final List<PlacesModel> result;
   final List<CachedNetworkImage> photos;
 
-  const SearchResult(this.result, this.photos, {super.key});
+  const SearchResultGrid(this.result, this.photos, {super.key});
 
   @override
-  State<SearchResult> createState() => _SearchResultState();
+  State<SearchResultGrid> createState() => _SearchResultGridState();
 }
 
 Widget buildGridView(
@@ -55,7 +56,7 @@ Widget buildNumber(PlacesModel item, CachedNetworkImage photo) {
   );
 }
 
-class _SearchResultState extends State<SearchResult> {
+class _SearchResultGridState extends State<SearchResultGrid> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(

@@ -2,7 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:skylark/models/places_model.dart';
-import 'package:skylark/screens/SearchResult.dart';
+import 'package:skylark/screens/SearchResultGrid.dart';
 import 'package:skylark/services/geometry.dart';
 import 'package:skylark/services/sort.dart';
 
@@ -181,7 +181,7 @@ class _SearchResultDisplayState extends State<SearchResultDisplay> {
                 children: [
                   SizedBox(
                     height: screenY(offset),
-                    child: SearchResult(searchResult, searchPhotos),
+                    child: SearchResultGrid(searchResult, searchPhotos),
                   ),
                 ],
               ),

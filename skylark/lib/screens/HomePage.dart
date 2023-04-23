@@ -9,8 +9,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:smooth_compass/utils/smooth_compass.dart';
 import 'package:skylark/models/places_model.dart';
-import 'package:skylark/screens/SearchResult.dart';
-import 'package:skylark/screens/SearchResult_2.dart';
+import 'package:skylark/screens/SearchResultGrid.dart';
+import 'package:skylark/screens/SearchResultDisplay.dart';
 import 'package:skylark/services/geometry.dart';
 import 'package:skylark/services/maps_getLocation.dart';
 import 'package:skylark/services/maps_places.dart';
@@ -73,7 +73,7 @@ class HomePageState extends State<HomePage> {
         snap: true,
         builder: (context, scrollController) => SingleChildScrollView(
           controller: scrollController,
-          child: SearchResult(result, photos),
+          child: SearchResultGrid(result, photos),
         ),
       ),
     );
