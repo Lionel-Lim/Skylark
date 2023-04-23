@@ -30,10 +30,16 @@ class HomePageState extends State<HomePage> {
   );
   StreamSubscription<Position>? positionStream;
 
-  Widget _searchPlaces(result, photos, userLocation) {
+  Widget _searchPlaces(result, photos, userLocation, onSearchFinished) {
     setState(() {});
     debugPrint("gridview updating...");
-    return SearchPlaces(result, photos, userLocation);
+    return SearchResultDisplay(result, photos, userLocation, onSearchFinished);
+  }
+
+  void updateSearchFinished(bool value) {
+    setState(() {
+      isSearchFinished = value;
+    });
   }
 
   Future<List<CachedNetworkImage>> _fetchImg(result) async {
@@ -174,6 +180,7 @@ class HomePageState extends State<HomePage> {
     } else {
       searchRadius = searchRadius + dir * 100;
     }
+    setState(() {});
   }
 
   void readDirection() {
@@ -183,7 +190,7 @@ class HomePageState extends State<HomePage> {
     }, onDone: () {
       debugPrint("Finish!");
     }, onError: (error) {
-      print(error);
+      debugPrint(error);
     });
 
     Compass()
@@ -345,8 +352,10 @@ class HomePageState extends State<HomePage> {
             Positioned(
               bottom: 0,
               left: 0,
+              // when isSearchFinished is changed, show transition animation
               child: isSearchFinished
-                  ? _searchPlaces(searchResult, searchPhoto, userLatLng)
+                  ? _searchPlaces(searchResult, searchPhoto, userLatLng,
+                      updateSearchFinished)
                   : Container(),
             ),
           ],
@@ -400,16 +409,25 @@ class HomePageState extends State<HomePage> {
                   var center = polytool.centroid;
                   var radius = Geometry().calculateDistance(sw, ne)! / 2;
                   try {
-                    searchResult = await APIService()
+                    late List<PlacesModel> tempSearchResult;
+                    searchResult = [];
+                    tempSearchResult = await APIService()
                         .searchPlaces(coorinates: center, radius: radius)
                         .timeout(const Duration(seconds: 20));
+                    // Loop searchResult, and if the place is inside the polygon, keep it in searchResult else remove it from searchResult
+                    for (var place in tempSearchResult) {
+                      LatLng point = LatLng(place.geometry["location"]["lat"],
+                          place.geometry["location"]["lng"]);
+                      if (Geometry().isInside(point, polygon)) {
+                        searchResult.add(place);
+                      }
+                    }
                     debugPrint("$searchResult");
                     searchPhoto = await _fetchImg(searchResult);
                     //
                     // Makers on the map
                     //
                     for (var place in searchResult) {
-                      // print(place.geometry);
                       LatLng point = LatLng(place.geometry["location"]["lat"],
                           place.geometry["location"]["lng"]);
                       _markers.add(
@@ -422,21 +440,21 @@ class HomePageState extends State<HomePage> {
                               : BitmapDescriptor.defaultMarkerWithHue(50),
                         ),
                       );
-                      _markers.add(Marker(
-                        markerId: const MarkerId("sw"),
-                        position: sw,
-                        icon: BitmapDescriptor.defaultMarkerWithHue(70),
-                      ));
-                      _markers.add(Marker(
-                        markerId: const MarkerId("ne"),
-                        position: ne,
-                        icon: BitmapDescriptor.defaultMarkerWithHue(70),
-                      ));
-                      _markers.add(Marker(
-                        markerId: const MarkerId("center"),
-                        position: center,
-                        icon: BitmapDescriptor.defaultMarkerWithHue(100),
-                      ));
+                      // _markers.add(Marker(
+                      //   markerId: const MarkerId("sw"),
+                      //   position: sw,
+                      //   icon: BitmapDescriptor.defaultMarkerWithHue(70),
+                      // ));
+                      // _markers.add(Marker(
+                      //   markerId: const MarkerId("ne"),
+                      //   position: ne,
+                      //   icon: BitmapDescriptor.defaultMarkerWithHue(70),
+                      // ));
+                      // _markers.add(Marker(
+                      //   markerId: const MarkerId("center"),
+                      //   position: center,
+                      //   icon: BitmapDescriptor.defaultMarkerWithHue(100),
+                      // ));
                     }
                     //
                     //

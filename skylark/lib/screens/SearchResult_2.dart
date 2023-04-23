@@ -8,53 +8,58 @@ import 'package:skylark/services/sort.dart';
 
 List<String> sortList = ["Distance", "Popularity", "Height"];
 
-class SearchPlaces extends StatefulWidget {
-  List<PlacesModel> result;
-  List<CachedNetworkImage> photos;
+class SearchResultDisplay extends StatefulWidget {
+  final List<PlacesModel> result;
+  final List<CachedNetworkImage> photos;
   final LatLng userLocation;
+  final Function(bool) onSearchFinished;
 
-  SearchPlaces(this.result, this.photos, this.userLocation, {super.key});
+  const SearchResultDisplay(
+      this.result, this.photos, this.userLocation, this.onSearchFinished,
+      {super.key});
 
   @override
-  State<SearchPlaces> createState() => _SearchPlacesState();
+  State<SearchResultDisplay> createState() => _SearchResultDisplayState();
 }
 
-class _SearchPlacesState extends State<SearchPlaces> {
+class _SearchResultDisplayState extends State<SearchResultDisplay> {
   double offset = 0;
   late double windowHeight;
+  late List<PlacesModel> searchResult;
+  late List<CachedNetworkImage> searchPhotos;
 
   void sortByDistance() {
     List<dynamic> distances = [];
-    for (var place in widget.result) {
+    for (var place in searchResult) {
       distances.add(Geometry().haversine(
           widget.userLocation,
           LatLng(place.geometry["location"]["lat"],
               place.geometry["location"]["lng"]))["Distance"]);
     }
     List<PlacesModel> sortedResult =
-        List.from(Sort().sortByAnotherList(widget.result, distances)[0])
+        List.from(Sort().sortByAnotherList(searchResult, distances)[0])
             .cast<PlacesModel>();
     List<CachedNetworkImage> sortedPhoto =
-        List.from(Sort().sortByAnotherList(widget.photos, distances)[0])
+        List.from(Sort().sortByAnotherList(searchPhotos, distances)[0])
             .cast<CachedNetworkImage>();
-    widget.result = sortedResult;
-    widget.photos = sortedPhoto;
+    searchResult = sortedResult;
+    searchPhotos = sortedPhoto;
     debugPrint("Sorted By Distance");
   }
 
   void sortByPopularity() {
     List<dynamic> popularities = [];
-    for (var place in widget.result) {
+    for (var place in searchResult) {
       popularities.add(place.userRating);
     }
     List<PlacesModel> sortedResult =
-        List.from(Sort().sortByAnotherList(widget.result, popularities)[0])
+        List.from(Sort().sortByAnotherList(searchResult, popularities)[0])
             .cast<PlacesModel>();
     List<CachedNetworkImage> sortedPhoto =
-        List.from(Sort().sortByAnotherList(widget.photos, popularities)[0])
+        List.from(Sort().sortByAnotherList(searchPhotos, popularities)[0])
             .cast<CachedNetworkImage>();
-    widget.result = sortedResult.reversed.toList();
-    widget.photos = sortedPhoto.reversed.toList();
+    searchResult = sortedResult.reversed.toList();
+    searchPhotos = sortedPhoto.reversed.toList();
     debugPrint("Sorted By Popularity");
   }
 
@@ -70,6 +75,9 @@ class _SearchPlacesState extends State<SearchPlaces> {
 
   @override
   void initState() {
+    searchResult = widget.result;
+    searchPhotos = widget.photos;
+    sortByDistance();
     super.initState();
   }
 
@@ -81,17 +89,13 @@ class _SearchPlacesState extends State<SearchPlaces> {
     double width = MediaQuery.of(context).size.width;
 
     double screenY(offset) {
-      // debugPrint("Offset is : $offset");
       windowHeight = height / 2 - offset;
-      // debugPrint("window height is :$windowHeight");
       if (windowHeight < height * 0.8) {
         if (windowHeight < height * 0.2) {
           return height * 0.2;
         }
-        // debugPrint("Case 1 $windowHeight");
         return windowHeight;
       } else {
-        // debugPrint("Case 2 $windowHeight");
         windowHeight = height * 0.8;
         return height * 0.8;
       }
@@ -130,12 +134,29 @@ class _SearchPlacesState extends State<SearchPlaces> {
               ),
               SizedBox(
                 width: width,
-                child: const Text(
-                  " Search Result",
-                  style: TextStyle(
-                    fontSize: 40,
-                    fontWeight: FontWeight.w600,
-                  ),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: width * 0.8,
+                      child: const Text(
+                        " Search Result",
+                        style: TextStyle(
+                          fontSize: 40,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    // exit button
+                    IconButton(
+                      onPressed: () {
+                        widget.onSearchFinished(false);
+                      },
+                      icon: const Icon(
+                        Icons.close,
+                        size: 30,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               SizedBox(
@@ -159,8 +180,8 @@ class _SearchPlacesState extends State<SearchPlaces> {
               Column(
                 children: [
                   SizedBox(
-                    height: windowHeight * 0.9,
-                    child: SearchResult(widget.result, widget.photos),
+                    height: screenY(offset),
+                    child: SearchResult(searchResult, searchPhotos),
                   ),
                 ],
               ),
