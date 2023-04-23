@@ -269,7 +269,7 @@ class HomePageState extends State<HomePage> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF0F9D58),
         // on below line we have given title of app
-        title: const Text("What is it?"),
+        title: const Text("Skylark"),
       ),
       body: Container(
         child: Stack(

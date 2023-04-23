@@ -22,7 +22,6 @@ class MyApp extends StatelessWidget {
       ),
       // First screen of our app
       home: const HomePage(),
-      // home: const Compass(),
     );
   }
 }
