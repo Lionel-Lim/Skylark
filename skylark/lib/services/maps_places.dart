@@ -20,8 +20,8 @@ class APIService {
     required double radius,
     List<String> types = const ['establishment'],
   }) async {
-    apiKeys =
-        jsonDecode(await ReadUtility().loadAsset('assets/APIKeys.json'))[0];
+    apiKeys = jsonDecode(
+        await ReadUtility().loadAsset('assets/keys/APIKeys.json'))[0];
     final url = Uri.parse(
         "$searchURL${coorinates.latitude}%2C${coorinates.longitude}&radius=$radius&type=$types&key=${apiKeys["GoogleMaps"]}");
     final response = await http.get(url);
