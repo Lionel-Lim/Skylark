@@ -112,6 +112,7 @@ class HomePageState extends State<HomePage> {
         );
       }
     });
+    setState(() {});
   }
 
   void updateHeadingLine({
@@ -153,11 +154,12 @@ class HomePageState extends State<HomePage> {
         points: [userLatLng, polygon[3]],
       ),
     ]);
+    setState(() {});
   }
 
   void updateCameraPosition({
     required LatLng coordinates,
-    double radius = 1000,
+    required double radius,
   }) async {
     CameraPosition cameraPosition = CameraPosition(
       target: coordinates,
@@ -369,108 +371,116 @@ class HomePageState extends State<HomePage> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            SizedBox(
-              width: 150,
-              child: FloatingActionButton.extended(
-                icon: const Icon(Icons.location_on_sharp),
-                label: const Text("My Location"),
-                onPressed: () async {
-                  getUserLocation();
-                  // _markers.add(
-                  //   Marker(
-                  //       markerId: const MarkerId("user"),
-                  //       position: userLatLng,
-                  //       icon: BitmapDescriptor.defaultMarker),
-                  // );
-                  updateCameraPosition(coordinates: userLatLng);
-                },
-              ),
-            ),
-            SizedBox(
-              width: 150,
-              child: FloatingActionButton.extended(
-                icon: isSearching ? null : const Icon(Icons.search_sharp),
-                label: isSearching
-                    ? const CircularProgressIndicator(
-                        color: Colors.white,
-                      )
-                    : const Text("Search"),
+            isSearchFinished
+                ? Container()
+                : SizedBox(
+                    width: 150,
+                    child: FloatingActionButton.extended(
+                      icon: const Icon(Icons.location_on_sharp),
+                      label: const Text("My Location"),
+                      onPressed: () async {
+                        getUserLocation();
+                        // _markers.add(
+                        //   Marker(
+                        //       markerId: const MarkerId("user"),
+                        //       position: userLatLng,
+                        //       icon: BitmapDescriptor.defaultMarker),
+                        // );
+                        updateCameraPosition(
+                            coordinates: userLatLng, radius: searchRadius);
+                      },
+                    ),
+                  ),
+            isSearchFinished
+                ? Container()
+                : SizedBox(
+                    width: 150,
+                    child: FloatingActionButton.extended(
+                      icon: isSearching ? null : const Icon(Icons.search_sharp),
+                      label: isSearching
+                          ? const CircularProgressIndicator(
+                              color: Colors.white,
+                            )
+                          : const Text("Search"),
 
-                // label: const CircularProgressIndicator(
-                //   color: Colors.white,
-                // ),
-                onPressed: () async {
-                  _markers.clear();
-                  isSearching = true;
+                      // label: const CircularProgressIndicator(
+                      //   color: Colors.white,
+                      // ),
+                      onPressed: () async {
+                        _markers.clear();
+                        isSearching = true;
 
-                  var polytool = PolygonTool(polygon);
-                  var sw = polytool.southwest;
-                  var ne = polytool.northeast;
-                  var center = polytool.centroid;
-                  var radius = Geometry().calculateDistance(sw, ne)! / 2;
-                  try {
-                    late List<PlacesModel> tempSearchResult;
-                    searchResult = [];
-                    tempSearchResult = await APIService()
-                        .searchPlaces(coorinates: center, radius: radius)
-                        .timeout(const Duration(seconds: 20));
-                    // Loop searchResult, and if the place is inside the polygon, keep it in searchResult else remove it from searchResult
-                    for (var place in tempSearchResult) {
-                      LatLng point = LatLng(place.geometry["location"]["lat"],
-                          place.geometry["location"]["lng"]);
-                      if (Geometry().isInside(point, polygon)) {
-                        searchResult.add(place);
-                      }
-                    }
-                    debugPrint("$searchResult");
-                    searchPhoto = await _fetchImg(searchResult);
-                    //
-                    // Makers on the map
-                    //
-                    for (var place in searchResult) {
-                      LatLng point = LatLng(place.geometry["location"]["lat"],
-                          place.geometry["location"]["lng"]);
-                      _markers.add(
-                        Marker(
-                          markerId: MarkerId(place.placeId),
-                          position: LatLng(place.geometry["location"]["lat"],
-                              place.geometry["location"]["lng"]),
-                          icon: Geometry().isInside(point, polygon)
-                              ? BitmapDescriptor.defaultMarker
-                              : BitmapDescriptor.defaultMarkerWithHue(50),
-                        ),
-                      );
-                      // _markers.add(Marker(
-                      //   markerId: const MarkerId("sw"),
-                      //   position: sw,
-                      //   icon: BitmapDescriptor.defaultMarkerWithHue(70),
-                      // ));
-                      // _markers.add(Marker(
-                      //   markerId: const MarkerId("ne"),
-                      //   position: ne,
-                      //   icon: BitmapDescriptor.defaultMarkerWithHue(70),
-                      // ));
-                      // _markers.add(Marker(
-                      //   markerId: const MarkerId("center"),
-                      //   position: center,
-                      //   icon: BitmapDescriptor.defaultMarkerWithHue(100),
-                      // ));
-                    }
-                    //
-                    //
-                    //
-                    if (!mounted) return;
-                    // _showModalButtonSheet(context, searchResult, searchPhoto);
-                    isSearching = false;
-                    isSearchFinished = true;
-                  } on TimeoutException {
-                    isSearching = false;
-                    debugPrint("Timeout Error");
-                  }
-                  setState(() {});
-                },
-              ),
-            ),
+                        var polytool = PolygonTool(polygon);
+                        var sw = polytool.southwest;
+                        var ne = polytool.northeast;
+                        var center = polytool.centroid;
+                        var radius = Geometry().calculateDistance(sw, ne)! / 2;
+                        try {
+                          late List<PlacesModel> tempSearchResult;
+                          searchResult = [];
+                          tempSearchResult = await APIService()
+                              .searchPlaces(coorinates: center, radius: radius)
+                              .timeout(const Duration(seconds: 20));
+                          // Loop searchResult, and if the place is inside the polygon, keep it in searchResult else remove it from searchResult
+                          for (var place in tempSearchResult) {
+                            LatLng point = LatLng(
+                                place.geometry["location"]["lat"],
+                                place.geometry["location"]["lng"]);
+                            if (Geometry().isInside(point, polygon)) {
+                              searchResult.add(place);
+                            }
+                          }
+                          debugPrint("$searchResult");
+                          searchPhoto = await _fetchImg(searchResult);
+                          //
+                          // Makers on the map
+                          //
+                          for (var place in searchResult) {
+                            LatLng point = LatLng(
+                                place.geometry["location"]["lat"],
+                                place.geometry["location"]["lng"]);
+                            _markers.add(
+                              Marker(
+                                markerId: MarkerId(place.placeId),
+                                position: LatLng(
+                                    place.geometry["location"]["lat"],
+                                    place.geometry["location"]["lng"]),
+                                icon: Geometry().isInside(point, polygon)
+                                    ? BitmapDescriptor.defaultMarker
+                                    : BitmapDescriptor.defaultMarkerWithHue(50),
+                              ),
+                            );
+                            // _markers.add(Marker(
+                            //   markerId: const MarkerId("sw"),
+                            //   position: sw,
+                            //   icon: BitmapDescriptor.defaultMarkerWithHue(70),
+                            // ));
+                            // _markers.add(Marker(
+                            //   markerId: const MarkerId("ne"),
+                            //   position: ne,
+                            //   icon: BitmapDescriptor.defaultMarkerWithHue(70),
+                            // ));
+                            // _markers.add(Marker(
+                            //   markerId: const MarkerId("center"),
+                            //   position: center,
+                            //   icon: BitmapDescriptor.defaultMarkerWithHue(100),
+                            // ));
+                          }
+                          //
+                          //
+                          //
+                          if (!mounted) return;
+                          // _showModalButtonSheet(context, searchResult, searchPhoto);
+                          isSearching = false;
+                          isSearchFinished = true;
+                        } on TimeoutException {
+                          isSearching = false;
+                          debugPrint("Timeout Error");
+                        }
+                        setState(() {});
+                      },
+                    ),
+                  ),
           ],
         ),
       ),

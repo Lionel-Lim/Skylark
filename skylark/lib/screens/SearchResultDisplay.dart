@@ -130,7 +130,7 @@ class _SearchResultDisplayState extends State<SearchResultDisplay> {
           child: Column(
             children: [
               const SizedBox(
-                height: 100,
+                height: 50,
               ),
               SizedBox(
                 width: width,
@@ -160,7 +160,7 @@ class _SearchResultDisplayState extends State<SearchResultDisplay> {
                 ),
               ),
               SizedBox(
-                height: 50,
+                height: 40,
                 child: DropdownButton(
                   value: sortValue,
                   onChanged: ((value) {
@@ -180,7 +180,7 @@ class _SearchResultDisplayState extends State<SearchResultDisplay> {
               Column(
                 children: [
                   SizedBox(
-                    height: screenY(offset),
+                    height: screenY(offset) * 0.8,
                     child: SearchResultGrid(searchResult, searchPhotos),
                   ),
                 ],
