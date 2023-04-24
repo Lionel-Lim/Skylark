@@ -1,4 +1,3 @@
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:skylark/models/places_model.dart';
@@ -33,26 +32,54 @@ Widget buildGridView(
 }
 
 Widget buildNumber(PlacesModel item, CachedNetworkImage photo) {
-  return Stack(
-    alignment: AlignmentDirectional.topCenter,
-    children: [
-      ClipRRect(
+  return Padding(
+    padding: const EdgeInsets.all(5.0),
+    child: Container(
+      decoration: BoxDecoration(
         borderRadius: const BorderRadius.all(Radius.circular(10)),
-        clipBehavior: Clip.hardEdge,
-        child: Column(
-          children: [
-            SizedBox(
-              width: 200,
-              height: 150,
-              child: photo,
-            ),
-            Text(
-              item.name,
-            )
-          ],
-        ),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.grey.withOpacity(0.2),
+              spreadRadius: 5,
+              blurRadius: 0,
+              offset: const Offset(3, 6)),
+        ],
       ),
-    ],
+      child: Stack(
+        alignment: AlignmentDirectional.center,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(5.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                SizedBox(
+                  width: 200,
+                  height: 150,
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.all(
+                      Radius.circular(10),
+                    ),
+                    child: photo,
+                  ),
+                ),
+                SizedBox(
+                  width: 200,
+                  child: Text(
+                    item.name,
+                    textAlign: TextAlign.left,
+                    style: const TextStyle(
+                      fontSize: 15,
+                    ),
+                  ),
+                )
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
   );
 }
 

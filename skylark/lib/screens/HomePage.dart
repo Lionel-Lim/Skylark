@@ -269,7 +269,7 @@ class HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0F9D58),
+        // backgroundColor: const Color(0xFF0F9D58),
         // on below line we have given title of app
         title: const Text("Skylark"),
       ),
