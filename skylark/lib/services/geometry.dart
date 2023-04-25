@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:maps_toolkit/maps_toolkit.dart' as maptool;
 
@@ -85,5 +86,62 @@ class PolygonTool {
 
   double _getMax(List<double> values) {
     return values.reduce((value, element) => value > element ? value : element);
+  }
+}
+
+double calculateAngle(Offset center, Offset point) {
+  final dx = point.dx - center.dx;
+  final dy = point.dy - center.dy;
+  return atan2(dy, dx);
+}
+
+SectorAngles calculateSectorAngles(
+    Offset start, Offset end, Offset center, Offset user) {
+  final startAngle = calculateAngle(center, start);
+  final endAngle = calculateAngle(center, end);
+  final sweepAngle = endAngle - startAngle;
+  return SectorAngles(startAngle: startAngle, sweepAngle: sweepAngle);
+}
+
+class SectorAngles {
+  final double startAngle;
+  final double sweepAngle;
+
+  SectorAngles({required this.startAngle, required this.sweepAngle});
+}
+
+class SectorPainter extends CustomPainter {
+  final double startAngle;
+  final double sweepAngle;
+  final Color color;
+
+  SectorPainter(
+      {required this.startAngle,
+      required this.sweepAngle,
+      required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = min(size.width, size.height) / 2;
+
+    final path = Path()
+      ..moveTo(center.dx, center.dy)
+      ..arcTo(Rect.fromCircle(center: center, radius: radius), startAngle,
+          sweepAngle, false)
+      ..close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant SectorPainter oldDelegate) {
+    return oldDelegate.startAngle != startAngle ||
+        oldDelegate.sweepAngle != sweepAngle ||
+        oldDelegate.color != color;
   }
 }

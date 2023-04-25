@@ -25,16 +25,18 @@ class APIService {
     final url = Uri.parse(
         "$searchURL${coorinates.latitude}%2C${coorinates.longitude}&radius=$radius&type=$types&key=${apiKeys["GoogleMaps"]}");
     final response = await http.get(url);
-    // print(response.statusCode);
-    if (response.statusCode == 200) {
-      for (var res in jsonDecode(response.body)["results"].sublist(1)) {
+    final jsonResponse = jsonDecode(response.body);
+    if (response.statusCode == 200 &&
+        jsonResponse["status"] != "ZERO_RESULTS") {
+      for (var res in jsonResponse["results"].sublist(1)) {
         // print(res["name"]);
         searchResult.add(PlacesModel.fromJson(res));
       }
       // print(searchResult);
       return searchResult;
+    } else {
+      return [];
     }
-    throw Error();
   }
 
   Future<CachedNetworkImage> getPhoto(String photoReference) async {

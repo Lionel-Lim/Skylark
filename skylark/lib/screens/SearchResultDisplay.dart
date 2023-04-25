@@ -6,7 +6,7 @@ import 'package:skylark/screens/SearchResultGrid.dart';
 import 'package:skylark/services/geometry.dart';
 import 'package:skylark/services/sort.dart';
 
-List<String> sortList = ["Distance", "Popularity", "Height"];
+List<String> sortList = ["Distance", "Popularity"];
 
 class SearchResultDisplay extends StatefulWidget {
   final List<PlacesModel> result;
@@ -35,7 +35,9 @@ class _SearchResultDisplayState extends State<SearchResultDisplay> {
           widget.userLocation,
           LatLng(place.geometry["location"]["lat"],
               place.geometry["location"]["lng"]))["Distance"]);
+      place.geometry["distance"] = distances.last;
     }
+
     List<PlacesModel> sortedResult =
         List.from(Sort().sortByAnotherList(searchResult, distances)[0])
             .cast<PlacesModel>();
@@ -91,8 +93,9 @@ class _SearchResultDisplayState extends State<SearchResultDisplay> {
     double screenY(offset) {
       windowHeight = height / 2 - offset;
       if (windowHeight < height * 0.8) {
-        if (windowHeight < height * 0.2) {
-          return height * 0.2;
+        if (windowHeight < height * 0.10) {
+          debugPrint("${height * 0.10}");
+          return height * 0.10;
         }
         return windowHeight;
       } else {
@@ -125,12 +128,12 @@ class _SearchResultDisplayState extends State<SearchResultDisplay> {
         ),
         width: width,
         height: screenY(offset),
-        child: OverflowBox(
-          maxHeight: double.infinity,
+        child: SizedBox(
+          // maxHeight: height * 0.2,
           child: Column(
             children: [
               const SizedBox(
-                height: 50,
+                height: 20,
               ),
               SizedBox(
                 width: width,
@@ -159,32 +162,40 @@ class _SearchResultDisplayState extends State<SearchResultDisplay> {
                   ],
                 ),
               ),
-              SizedBox(
-                height: 40,
-                child: DropdownButton(
-                  value: sortValue,
-                  onChanged: ((value) {
-                    setState(() {
-                      sortPlaces(value);
-                      sortValue = value!;
-                    });
-                  }),
-                  items: sortList.map((value) {
-                    return DropdownMenuItem(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
-                ),
-              ),
-              Column(
-                children: [
-                  SizedBox(
-                    height: screenY(offset) * 0.8,
-                    child: SearchResultGrid(searchResult, searchPhotos),
+              if (screenY(offset) > height * 0.15)
+                SizedBox(
+                  width: width,
+                  height: 40,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      DropdownButton(
+                        value: sortValue,
+                        onChanged: ((value) {
+                          setState(() {
+                            sortPlaces(value);
+                            sortValue = value!;
+                          });
+                        }),
+                        items: sortList.map((value) {
+                          return DropdownMenuItem(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              if (screenY(offset) > height * 0.15)
+                Column(
+                  children: [
+                    SizedBox(
+                      height: screenY(offset) - 30 - 40 - 40 - 8,
+                      child: SearchResultGrid(searchResult, searchPhotos),
+                    ),
+                  ],
+                ),
             ],
           ),
         ),

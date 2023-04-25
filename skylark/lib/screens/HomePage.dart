@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_compass/flutter_compass.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:skylark/models/colours.dart';
 import 'package:smooth_compass/utils/smooth_compass.dart';
 import 'package:skylark/models/places_model.dart';
 import 'package:skylark/screens/SearchResultGrid.dart';
@@ -29,6 +30,22 @@ class HomePageState extends State<HomePage> {
     // distanceFilter: 0,
   );
   StreamSubscription<Position>? positionStream;
+
+  Future<String?> zeroResultErrorDialoag() async {
+    return await showDialog<String>(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text('Zero Results Found'),
+        content: const Text('Please try again with different location.'),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'OK'),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _searchPlaces(result, photos, userLocation, onSearchFinished) {
     setState(() {});
@@ -120,7 +137,7 @@ class HomePageState extends State<HomePage> {
     required double longitude,
     required double heading,
     required double radius,
-  }) {
+  }) async {
     // Reset geometry
     _lines.clear();
     polygon.clear();
@@ -134,26 +151,36 @@ class HomePageState extends State<HomePage> {
       endPoint,
       Geometry().rotatePoint(startPoint, endPoint, 60)
     ]);
-    _lines.addAll([
-      Polyline(
-        polylineId: const PolylineId("Left"),
-        color: Colors.orange,
-        width: 5,
-        points: [userLatLng, polygon[1]],
-      ),
-      Polyline(
-        polylineId: const PolylineId("Direction"),
-        color: Colors.red,
-        width: 5,
-        points: [startPoint, polygon[2]],
-      ),
-      Polyline(
-        polylineId: const PolylineId("Right"),
-        color: Colors.pink,
-        width: 5,
-        points: [userLatLng, polygon[3]],
-      ),
-    ]);
+    // TODO: Add a sector
+    // sectorPoints.clear();
+    // for (LatLng p in polygon) {
+    //   sectorPoints.add(await _onGetMarkerOffset(p));
+    // }
+    // print(sectorPoints[0].dx);
+    // print(sectorPoints[0].dy);
+    // sectorAngles = calculateSectorAngles(
+    //     sectorPoints[1], sectorPoints[3], sectorPoints[0], sectorPoints[2]);
+    // debugPrint("Sector Angles are $sectorAngles");
+    // _lines.addAll([
+    //   Polyline(
+    //     polylineId: const PolylineId("Left"),
+    //     color: Colors.orange,
+    //     width: 5,
+    //     points: [userLatLng, polygon[1]],
+    //   ),
+    //   Polyline(
+    //     polylineId: const PolylineId("Direction"),
+    //     color: Colors.red,
+    //     width: 5,
+    //     points: [startPoint, polygon[2]],
+    //   ),
+    //   Polyline(
+    //     polylineId: const PolylineId("Right"),
+    //     color: Colors.pink,
+    //     width: 5,
+    //     points: [userLatLng, polygon[3]],
+    //   ),
+    // ]);
     setState(() {});
   }
 
@@ -235,6 +262,9 @@ class HomePageState extends State<HomePage> {
   late List<PlacesModel> searchResult;
   late List<CachedNetworkImage> searchPhoto;
   late Position userPosition;
+  List<Offset> sectorPoints = [];
+  SectorAngles sectorAngles = SectorAngles(startAngle: -1, sweepAngle: -1);
+  // final SectorAngles = calculateSectorAngles(start, end, center, user)
 
   // Set init map controller
   final Completer<GoogleMapController> _controller = Completer();
@@ -256,6 +286,20 @@ class HomePageState extends State<HomePage> {
   final List<Polyline> _lines = <Polyline>[];
   final List<LatLng> polygon = [];
 
+  // TODO: Add a sector
+  // Future<Offset> getScreenOffsetFromLatLng(LatLng latLng) async {
+  //   return _controller.future.then((controller) async {
+  //     final screenCoordinate = await controller.getScreenCoordinate(latLng);
+  //     return Offset(
+  //         screenCoordinate.x.toDouble(), screenCoordinate.y.toDouble());
+  //   });
+  // }
+
+  // Future<Offset> _onGetMarkerOffset(LatLng location) async {
+  //   // The marker's LatLng position
+  //   return await getScreenOffsetFromLatLng(location);
+  // }
+
   @override
   void initState() {
     super.initState();
@@ -272,6 +316,97 @@ class HomePageState extends State<HomePage> {
         // backgroundColor: const Color(0xFF0F9D58),
         // on below line we have given title of app
         title: const Text("Skylark"),
+      ),
+      endDrawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: projectColorScheme.primary,
+              ),
+              child: const Text(
+                "Skylark",
+                style: TextStyle(
+                  fontSize: 30,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            ListTile(
+              title: const Text(
+                "About",
+              ),
+              onTap: () => showDialog<String>(
+                context: context,
+                builder: (BuildContext context) => Dialog.fullscreen(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      const Text(
+                        'Skylark',
+                        style: TextStyle(
+                          fontSize: 30,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const Text(
+                          "\nSkylark helps users identify and discover unknown buildings"),
+                      const Text(
+                          '\nFor more information,\nplease visit https://github.com/Lionel-Lim/Skylark\n\n\n\nDongyoung',
+                          textAlign: TextAlign.center),
+                      const SizedBox(
+                        height: 15,
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        child: const Text('Close'),
+                      ),
+                      const Image(
+                          image: AssetImage("assets/images/Logo_Skylark.png"))
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            ListTile(
+              title: Text(
+                "Latitude : ${userLatLng.latitude}",
+                style: const TextStyle(
+                  color: Colors.grey,
+                ),
+              ),
+            ),
+            ListTile(
+              title: Text(
+                "Longitude : ${userLatLng.longitude}",
+                style: const TextStyle(
+                  color: Colors.grey,
+                ),
+              ),
+            ),
+            ListTile(
+              title: Text(
+                "Heading : $userHeading",
+                style: const TextStyle(
+                  color: Colors.grey,
+                ),
+              ),
+            ),
+            ListTile(
+              title: Text(
+                "Radius : $searchRadius",
+                style: const TextStyle(
+                  color: Colors.grey,
+                ),
+              ),
+            ),
+            const Image(image: AssetImage("assets/images/Logo_Skylark.png")),
+          ],
+        ),
       ),
       body: Container(
         child: Stack(
@@ -290,61 +425,67 @@ class HomePageState extends State<HomePage> {
                 // on below line setting compass enabled.
                 compassEnabled: true,
                 myLocationButtonEnabled: false,
+                zoomControlsEnabled: false,
                 // on below line specifying controller on map complete.
                 onMapCreated: (GoogleMapController controller) {
                   controller.setMapStyle(_mapStyle);
                   _controller.complete(controller);
                 },
                 polylines: Set<Polyline>.of(_lines),
+                polygons: <Polygon>{
+                  if (polygon.isNotEmpty)
+                    Polygon(
+                      polygonId: const PolygonId('1'),
+                      points: polygon,
+                      strokeWidth: 1,
+                      fillColor: projectColorScheme.primary.withOpacity(0.3),
+                    ),
+                },
               ),
             ),
             // Test Panel --------- Remove in production
             Positioned(
+              left: MediaQuery.of(context).size.width / 2 - 75,
+              bottom: 100,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    "Lat :${userLatLng.latitude}",
-                    style: const TextStyle(
-                      fontSize: 20,
-                    ),
-                  ),
-                  Text(
-                    "Lon :${userLatLng.longitude}",
-                    style: const TextStyle(
-                      fontSize: 20,
-                    ),
-                  ),
-                  Text(
-                    "Heading :$userHeading",
-                    style: const TextStyle(
-                      fontSize: 20,
-                    ),
-                  ),
-                  Text(
-                    "Live Reading :${!positionStream!.isPaused}",
-                    style: const TextStyle(
-                      fontSize: 20,
-                    ),
-                  ),
-                  Text(
-                    "Radius :$searchRadius",
-                    style: const TextStyle(
-                      fontSize: 20,
-                    ),
-                  ),
                   Row(
                     children: [
-                      IconButton(
+                      Container(
+                        decoration: BoxDecoration(
+                          color: projectColorScheme.secondary,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: IconButton(
                           onPressed: () => updateSearchRadius(
-                                isIncresing: true,
-                              ),
-                          icon: const Icon(Icons.arrow_upward)),
-                      IconButton(
+                            isIncresing: true,
+                          ),
+                          icon: const Icon(Icons.unfold_more_double_outlined),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 70,
+                        child: Text(
+                          "Search Radius\n${(searchRadius * 0.001).toStringAsFixed(1)} km",
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: projectColorScheme.secondary,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: IconButton(
                           onPressed: () => updateSearchRadius(
-                                isIncresing: false,
-                              ),
-                          icon: const Icon(Icons.arrow_downward)),
+                            isIncresing: false,
+                          ),
+                          icon: const Icon(Icons.unfold_less_double_outlined),
+                        ),
+                      ),
                     ],
                   )
                 ],
@@ -360,6 +501,20 @@ class HomePageState extends State<HomePage> {
                       updateSearchFinished)
                   : Container(),
             ),
+            // TODO: Add a sector
+            // Draw a sector using points in polygons at userLatLng on the screen
+            // if sectorAngles is not initialised, do not draw
+            // if (sectorAngles.startAngle != -1 && sectorAngles.sweepAngle != -1)
+            //   Center(
+            //     child: CustomPaint(
+            //       painter: SectorPainter(
+            //         startAngle: sectorAngles.startAngle,
+            //         sweepAngle: sectorAngles.sweepAngle,
+            //         color: Colors.red.withOpacity(0.5),
+            //       ),
+            //       size: const Size(600, 600),
+            //     ),
+            //   ),
           ],
         ),
       ),
@@ -421,6 +576,13 @@ class HomePageState extends State<HomePage> {
                           tempSearchResult = await APIService()
                               .searchPlaces(coorinates: center, radius: radius)
                               .timeout(const Duration(seconds: 20));
+                          // If no result, return
+                          if (tempSearchResult.isEmpty) {
+                            zeroResultErrorDialoag();
+                            debugPrint("No result found");
+                            isSearching = false;
+                            return;
+                          }
                           // Loop searchResult, and if the place is inside the polygon, keep it in searchResult else remove it from searchResult
                           for (var place in tempSearchResult) {
                             LatLng point = LatLng(
