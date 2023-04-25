@@ -94,7 +94,8 @@ The following dependencies are used in the Skylark application:
 
 ## Demo
 <p align="center"> 
-<img src="https://raw.githubusercontent.com/Lionel-Lim/Skylark/main/src/demo.gif" width="250" alt="4. Tap the top-right corner button to see more details."></p>
+<img src="https://raw.githubusercontent.com/Lionel-Lim/Skylark/main/src/demo.gif" width="250" alt="Application demo"></p>
+https://github.com/Lionel-Lim/Skylark/blob/main/src/demo.gif
 
 ## Contact
 If you have any questions or suggestions, please feel free to reach out to the project maintainer:
