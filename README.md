@@ -52,8 +52,9 @@ nano APIKey.json
 	}
 ]
 ```
+- Please also visit [google_maps_flutter](https://pub.dev/packages/google_maps_flutter).
 
-4. Install the [dependencies](#dependencies):
+1. Install the [dependencies](#dependencies):
 
 ```bash
 flutter pub get
