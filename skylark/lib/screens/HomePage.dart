@@ -101,11 +101,33 @@ class HomePageState extends State<HomePage> {
         .getCurrentUserLocation()
         .then((value) => userPosition = value);
     userLatLng = LatLng(userPosition.latitude, userPosition.longitude);
-    // userHeading = userPosition.heading;
+    userHeading = userPosition.heading;
+    debugPrint("Com 1 user location: ${userPosition.heading}");
   }
 
-  void listenLocationChanges() {
+  void listenLocationChanges() async {
     readDeviceInfo();
+
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return Future.error('Location services are disabled');
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return Future.error('Location permissions are denied');
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      return Future.error(
+          'Location permissions are permanently denied, we cannot request permissions.');
+    }
 
     Position? incomingPosition;
     positionStream =
@@ -227,8 +249,8 @@ class HomePageState extends State<HomePage> {
             interval: const Duration(milliseconds: -1), azimuthFix: 0)
         .listen(
       (event) {
-        userHeading = event.angle;
-        // debugPrint("S Compass value is ${event.angle}");
+        if (userHeading == 0) userHeading = event.angle;
+        debugPrint("Com 2 - ${event.angle}");
       },
     );
   }
