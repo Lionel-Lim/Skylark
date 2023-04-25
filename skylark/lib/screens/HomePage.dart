@@ -101,7 +101,7 @@ class HomePageState extends State<HomePage> {
         .getCurrentUserLocation()
         .then((value) => userPosition = value);
     userLatLng = LatLng(userPosition.latitude, userPosition.longitude);
-    userHeading = userPosition.heading;
+    // userHeading = userPosition.heading;
   }
 
   void listenLocationChanges() {
@@ -227,6 +227,7 @@ class HomePageState extends State<HomePage> {
             interval: const Duration(milliseconds: -1), azimuthFix: 0)
         .listen(
       (event) {
+        userHeading = event.angle;
         // debugPrint("S Compass value is ${event.angle}");
       },
     );
