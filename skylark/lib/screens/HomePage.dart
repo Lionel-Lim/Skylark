@@ -443,7 +443,6 @@ class HomePageState extends State<HomePage> {
                 },
               ),
             ),
-            // Test Panel --------- Remove in production
             Positioned(
               left: MediaQuery.of(context).size.width / 2 - 75,
               bottom: 100,
@@ -610,6 +609,10 @@ class HomePageState extends State<HomePage> {
                                 icon: Geometry().isInside(point, polygon)
                                     ? BitmapDescriptor.defaultMarker
                                     : BitmapDescriptor.defaultMarkerWithHue(50),
+                                infoWindow: InfoWindow(
+                                  title: place.name,
+                                  snippet: place.vicinity,
+                                ),
                               ),
                             );
                             // _markers.add(Marker(
